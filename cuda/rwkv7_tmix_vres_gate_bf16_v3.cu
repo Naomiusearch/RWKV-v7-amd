@@ -37,7 +37,7 @@ __device__ inline float load_bf16(const at::BFloat16* ptr) {
 }
 
 __device__ inline void store_bf16(at::BFloat16* ptr, float value) {
-    *reinterpret_cast<__nv_bfloat16*>(ptr) = __float2bfloat16_rn(value);
+    *reinterpret_cast<__nv_bfloat16*>(ptr) = __float2bfloat16(value);
 }
 
 __device__ inline float sigmoidf_fast(float x) {

@@ -3,7 +3,7 @@
 
 using bf = __nv_bfloat16;
 __device__ inline float to_float(const bf & u) { return __bfloat162float(u); }
-__device__ inline bf to_bf(const float & u) { return __float2bfloat16_rn(u); }
+__device__ inline bf to_bf(const float & u) { return __float2bfloat16(u); }
 
 typedef bf * __restrict__ F_;
 

@@ -17,6 +17,12 @@ constexpr int kRowsPerBlock = TMIX_LNX_RKVRES_XG_ROWS_PER_BLOCK;
 constexpr int kThreads = kWarpSize * kRowsPerBlock;
 constexpr float kLnXEps = 64e-5f;
 
+__device__ inline __nv_bfloat162 __floats2bfloat162_rn(const float a, const float b) {
+    __nv_bfloat162 val;
+    val = __nv_bfloat162(__float2bfloat16(a), __float2bfloat16(b));
+    return val;
+}
+
 __device__ inline __nv_bfloat162 load_bf16x2(const at::BFloat16* ptr) {
     return *reinterpret_cast<const __nv_bfloat162*>(ptr);
 }
@@ -31,7 +37,7 @@ __device__ inline void store_bf16x2(at::BFloat16* ptr, float v0, float v1) {
 
 __device__ inline float warp_sum(float v) {
     for (int offset = 16; offset > 0; offset >>= 1) {
-        v += __shfl_down_sync(0xffffffffu, v, offset);
+        v += __shfl_down_sync(0xffffffffffffffffull, v, offset);
     }
     return v;
 }
@@ -73,12 +79,12 @@ __global__ void tmix_lnx_rkvres_xg_v1_forward_kernel(
     const float x1 = __high2float(xv2);
 
     float sum = warp_sum(x0 + x1);
-    const float mean_val = __shfl_sync(0xffffffffu, sum, 0) * (1.0f / kHeadSize);
+    const float mean_val = __shfl_sync(0xffffffffffffffffull, sum, 0) * (1.0f / kHeadSize);
 
     const float d0 = x0 - mean_val;
     const float d1 = x1 - mean_val;
     float sq = warp_sum(d0 * d0 + d1 * d1);
-    const float var_val = __shfl_sync(0xffffffffu, sq, 0) * (1.0f / kHeadSize);
+    const float var_val = __shfl_sync(0xffffffffffffffffull, sq, 0) * (1.0f / kHeadSize);
     const float rstd_val = rsqrtf(var_val + kLnXEps);
 
     const __nv_bfloat162 rv2 = load_bf16x2(r + idx);
@@ -88,7 +94,7 @@ __global__ void tmix_lnx_rkvres_xg_v1_forward_kernel(
         __low2float(rv2) * __low2float(kv2) * __low2float(rk2) +
         __high2float(rv2) * __high2float(kv2) * __high2float(rk2);
     scale_sum = warp_sum(scale_sum);
-    const float scale_val = __shfl_sync(0xffffffffu, scale_sum, 0);
+    const float scale_val = __shfl_sync(0xffffffffffffffffull, scale_sum, 0);
 
     if (lane == 0) {
         mean[ng] = mean_val;
@@ -180,8 +186,8 @@ __global__ void tmix_lnx_rkvres_xg_v1_backward_kernel(
 
         float total_dxhat = warp_sum(dxhat0 + dxhat1);
         float total_dxhat_xhat = warp_sum(dxhat0 * xhat0 + dxhat1 * xhat1);
-        total_dxhat = __shfl_sync(0xffffffffu, total_dxhat, 0);
-        total_dxhat_xhat = __shfl_sync(0xffffffffu, total_dxhat_xhat, 0);
+        total_dxhat = __shfl_sync(0xffffffffffffffffull, total_dxhat, 0);
+        total_dxhat_xhat = __shfl_sync(0xffffffffffffffffull, total_dxhat_xhat, 0);
         const float inv_m = 1.0f / kHeadSize;
 
         const float gx0 = (dxhat0 - total_dxhat * inv_m - xhat0 * total_dxhat_xhat * inv_m) * rstd_val;
@@ -205,11 +211,11 @@ __global__ void tmix_lnx_rkvres_xg_v1_backward_kernel(
 
         float scale_sum = r0 * k0 * rk0 + r1 * k1 * rk1;
         scale_sum = warp_sum(scale_sum);
-        const float scale_val = __shfl_sync(0xffffffffu, scale_sum, 0);
+        const float scale_val = __shfl_sync(0xffffffffffffffffull, scale_sum, 0);
 
         const float v0 = __low2float(vv2);
         const float v1 = __high2float(vv2);
-        const float q = __shfl_sync(0xffffffffu, warp_sum(gy0 * v0 + gy1 * v1), 0);
+        const float q = __shfl_sync(0xffffffffffffffffull, warp_sum(gy0 * v0 + gy1 * v1), 0);
         store_bf16x2(grad_v + idx, gy0 * scale_val, gy1 * scale_val);
         store_bf16x2(grad_r + idx, q * k0 * rk0, q * k1 * rk1);
         store_bf16x2(grad_k + idx, q * r0 * rk0, q * r1 * rk1);

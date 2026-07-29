@@ -13,6 +13,12 @@ constexpr float kInvNormalizeEps = 1.0e12f;
 constexpr int kHeadSize = 64;
 constexpr int kWarpsPerBlock = 4;
 
+__device__ inline __nv_bfloat162 __floats2bfloat162_rn(const float a, const float b) {
+    __nv_bfloat162 val;
+    val = __nv_bfloat162(__float2bfloat16(a), __float2bfloat16(b));
+    return val;
+}
+
 __device__ inline __nv_bfloat162 load_bf16x2(const at::BFloat16* ptr) {
     return *reinterpret_cast<const __nv_bfloat162*>(ptr);
 }
@@ -27,13 +33,14 @@ __device__ inline void store_bf16(at::BFloat16* ptr, float value) {
 
 __device__ inline float warp_sum(float v) {
     for (int offset = 16; offset > 0; offset >>= 1) {
-        v += __shfl_down_sync(0xffffffffu, v, offset);
+        v += __shfl_down_sync(0xffffffffffffffffull, v, offset);
     }
     return v;
 }
 
 __device__ inline void atomic_add_float2(float* ptr, float x0, float x1) {
-    atomicAdd(reinterpret_cast<float2*>(ptr), make_float2(x0, x1));
+    atomicAdd(ptr, x0);
+    atomicAdd(ptr + 1, x1);
 }
 
 inline int64_t ceil_div(int64_t n, int64_t d) {
@@ -75,7 +82,7 @@ __global__ void tmix_kk_pre_forward64_v5_kernel(
 
     float sum_sq = u0 * u0 + u1 * u1;
     sum_sq = warp_sum(sum_sq);
-    const float total_sum_sq = __shfl_sync(0xffffffffu, sum_sq, 0);
+    const float total_sum_sq = __shfl_sync(0xffffffffffffffffull, sum_sq, 0);
     const float inv_d = 1.0f / fmaxf(sqrtf(total_sum_sq), kNormalizeEps);
     if (lane == 0) {
         inv_d_out[bth] = inv_d;
@@ -145,7 +152,7 @@ __global__ void tmix_kk_pre_backward64_v5_kernel(
 
     float dot = gkk_total0 * kk0 + gkk_total1 * kk1;
     dot = warp_sum(dot);
-    const float dot_total = __shfl_sync(0xffffffffu, dot, 0);
+    const float dot_total = __shfl_sync(0xffffffffffffffffull, dot, 0);
 
     const __nv_bfloat162 ka_scale2 = load_bf16x2(k_a + c);
     const __nv_bfloat162 gnew2 = load_bf16x2(grad_new_k + idx);

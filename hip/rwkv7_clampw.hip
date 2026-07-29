@@ -10,7 +10,7 @@
     #include <hip/hip_bf16.h>
     using bf = __hip_bfloat16;
     #define to_float(u) (__bfloat162float(u))
-    #define to_bf(u) (__float2bfloat16_rn(u))
+    #define to_bf(u) (__float2bfloat16(u))
 #endif
 
 using i64 = long long int;

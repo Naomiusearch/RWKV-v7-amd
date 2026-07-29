@@ -28,7 +28,7 @@ __device__ inline scalar_t float_to_scalar(float x) {
 
 template <>
 __device__ inline at::BFloat16 float_to_scalar<at::BFloat16>(float x) {
-    __nv_bfloat16 v = __float2bfloat16_rn(x);
+    __nv_bfloat16 v = __float2bfloat16(x);
     return *reinterpret_cast<at::BFloat16*>(&v);
 }
 
@@ -40,7 +40,7 @@ __device__ inline void reduce_max_first(float& value, int& index, float other_va
 }
 
 __device__ inline void warp_reduce_max_first(float& value, int& index) {
-    unsigned mask = 0xffffffffu;
+    uint64_t mask = 0xffffffffffffffffull;
     for (int offset = 16; offset > 0; offset >>= 1) {
         float other_value = __shfl_down_sync(mask, value, offset);
         int other_index = __shfl_down_sync(mask, index, offset);
@@ -49,7 +49,7 @@ __device__ inline void warp_reduce_max_first(float& value, int& index) {
 }
 
 __device__ inline float warp_reduce_sum(float value) {
-    unsigned mask = 0xffffffffu;
+    uint64_t mask = 0xffffffffffffffffull;
     for (int offset = 16; offset > 0; offset >>= 1) {
         value += __shfl_down_sync(mask, value, offset);
     }
