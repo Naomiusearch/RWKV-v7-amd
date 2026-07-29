@@ -49,7 +49,18 @@ if 'x070' in os.environ["RWKV_MY_TESTING"]:
     # use rwkv7_clampw_v3.cpp and rwkv7_clampw_v3_for_h100.cu for 20% faster fwd & bwd kernel on H100s and some consumer GPUS (for some Bsz*Headcount)
     # note: sometimes rwkv7_clampw_v3_for_h100_alt is faster
 
-    flags = ['-res-usage', f'-D_N_={HEAD_SIZE}', f"-D_CHUNK_LEN_={CHUNK_LEN}", "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"]
+    flags = [
+            f"-D_N_={HEAD_SIZE}",
+            f"-D_CHUNK_LEN_={CHUNK_LEN}",
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ]
     if "@rwkv3" in os.environ["RWKV_KERNEL"]:
         RWKV7_CLAMPW_OP = torch.ops.rwkv7_clampw_v3
         load(name="rwkv7_clampw_v3", sources=['cuda/rwkv7_clampw_v3_for_h100.cu', 'cuda/rwkv7_clampw_v3.cpp'], is_python_module=False, verbose=True, extra_cuda_cflags=flags)
@@ -85,7 +96,16 @@ if 'x070' in os.environ["RWKV_MY_TESTING"]:
 ########################################################################################################
 
 load(name="rwkv7_cmix_bf16_v5", sources=["cuda/rwkv7_cmix_bf16_v5.cpp","cuda/rwkv7_cmix_bf16_v5.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      is_python_module=False, verbose=True)
 
 class _CmixLayerV2Fn(torch.autograd.Function):
@@ -117,7 +137,16 @@ class _CmixLayerV2Fn(torch.autograd.Function):
 ########################################################################################################
 
 load(name="rwkv7_tmix_mix6_bf16_v5", sources=["cuda/rwkv7_tmix_mix6_bf16_v5.cpp","cuda/rwkv7_tmix_mix6_bf16_v5.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      is_python_module=False, verbose=True)
 
 from typing import Tuple
@@ -177,7 +206,16 @@ else:
 ########################################################################################################
 
 load(name="rwkv7_tmix_kk_pre_bf16_v5", sources=["cuda/rwkv7_tmix_kk_pre_bf16_v5.cpp","cuda/rwkv7_tmix_kk_pre_bf16_v5.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      is_python_module=False, verbose=True)
 
 assert HEAD_SIZE == 64
@@ -247,7 +285,16 @@ else:
 ########################################################################################################
 
 load(name="rwkv7_tmix_lnx_rkvres_xg_bf16_v1", sources=["cuda/rwkv7_tmix_lnx_rkvres_xg_bf16_v1.cpp","cuda/rwkv7_tmix_lnx_rkvres_xg_bf16_v1.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      is_python_module=False, verbose=True)
 
 def _setup_context(ctx, inputs, output):
@@ -325,7 +372,16 @@ else:
 ########################################################################################################
 
 load(name="rwkv7_tmix_a_gate_bf16", sources=["cuda/rwkv7_tmix_a_gate_bf16.cpp","cuda/rwkv7_tmix_a_gate_bf16.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      is_python_module=False, verbose=True)
 
 def _setup_context(ctx, inputs, output):
@@ -373,7 +429,16 @@ else:
 ########################################################################################################
 
 load(name="rwkv7_tmix_vres_gate_bf16_v3", sources=["cuda/rwkv7_tmix_vres_gate_bf16_v3.cpp","cuda/rwkv7_tmix_vres_gate_bf16_v3.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      is_python_module=False, verbose=True)
 
 def _setup_context(ctx, inputs, output):
@@ -429,7 +494,16 @@ else:
 ########################################################################################################
 
 L2WRAP_CE_CUDA_V2 = load(name="rwkv7_l2wrap_ce_bf16_v2", sources=["cuda/rwkv7_l2wrap_ce_bf16_v2.cpp","cuda/rwkv7_l2wrap_ce_bf16_v2.cu"], extra_cflags=["-O3"],
-     extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization"],
+     extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native"
+        ],
      verbose=True)
 
 class L2WrapCrossEntropyCUDA(torch.autograd.Function):
@@ -462,7 +536,17 @@ def l2wrap_cross_entropy(logits, targets):
 if int(os.environ["RWKV_HEAD_L2WRAP_CE_CHUNK"]) > 0:
     HEAD_L2WRAP_CE_CHUNK = int(os.environ["RWKV_HEAD_L2WRAP_CE_CHUNK"])
     HEAD_L2WRAP_CE_CUDA_V4 = load(name="rwkv7_head_l2wrap_ce_bf16_v4", sources=["cuda/rwkv7_head_l2wrap_ce_bf16_v4.cpp","cuda/rwkv7_head_l2wrap_ce_bf16_v4.cu"], extra_cflags=["-O3", f"-DHEAD_CE_CHUNK={HEAD_L2WRAP_CE_CHUNK}"],
-         extra_cuda_cflags=['-res-usage', "--use_fast_math", "-O3", "-Xptxas -O3", "--extra-device-vectorization", f"-DHEAD_CE_CHUNK={HEAD_L2WRAP_CE_CHUNK}"],
+         extra_cuda_cflags=[
+            "-xhip",
+            "-fopenmp",
+            "-ffast-math",
+            "-O3",
+            "-munsafe-fp-atomics",
+            "--save-temps",
+            '-DAMD',
+            "--offload-arch=native",
+            f"-DHEAD_CE_CHUNK={HEAD_L2WRAP_CE_CHUNK}"
+        ],
          verbose=True)
 
     class HeadL2WrapCrossEntropyCUDAV4(torch.autograd.Function):

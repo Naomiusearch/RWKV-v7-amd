@@ -11,12 +11,14 @@
 #
 #######################################################################################################################
 #
+C=hipcc
+CXX=hipcc
 MODEL_TYPE="x070" # x070 => rwkv-7.0
 #
 N_LAYER="12"
 N_EMBD="768"
 #
-CTX_LEN="512" # !!! change magic_prime if you change ctx_len !!!
+CTX_LEN="1024" # !!! change magic_prime if you change ctx_len !!!
 PROJ_DIR="out/L"$N_LAYER"-D"$N_EMBD"-"$MODEL_TYPE # set output folder
 #
 # !!! by default train.py will load the last .pth in PROJ_DIR, and continue training from it !!!
@@ -40,7 +42,7 @@ LR_INIT="6e-4"
 LR_FINAL="6e-5"
 GRAD_CP=1 # 1 => slower, save VRAM; 0 => faster, more VRAM
 HEAD_CHUNK=0 # 0 => faster, more VRAM; 65536 => slower, less VRAM; 4096 => slower, even less VRAM; (Note: this is LM head, not RWKV head)
-KERNEL="@rwkv3" # "" => default; "@rwkv3" => usually faster, especially for H100
+KERNEL="" # "" => default; "@rwkv3" => usually faster, especially for H100
 EPOCH_SAVE=10 # save every 10 "miniepochs" (1 miniepoch = 40320 * ctx_len tokens) => decrease if your GPU is weak
 #
 #######################################################################################################################
@@ -55,7 +57,7 @@ GPU_PER_NODE=1 # number of GPUs per node
 #
 python train.py --load_model "0" --wandb "Test" --proj_dir $PROJ_DIR --my_testing $MODEL_TYPE \
  --ctx_len $CTX_LEN --train_stage 3 --epoch_count 999999 --epoch_begin 0 \
- --data_file "data/minipile" --my_exit_tokens 1498226207 --magic_prime 2926181 \
+ --data_file "data/dataset2" --my_exit_tokens 202337681 --magic_prime 197573 \
  --num_nodes $N_NODE --micro_bsz $M_BSZ --n_layer $N_LAYER --n_embd $N_EMBD --kernel $KERNEL \
  --lr_init $LR_INIT --lr_final $LR_FINAL --warmup_steps 10 --beta1 0.9 --beta2 0.99 --adam_eps 1e-18 --data_type "binidx" --vocab_size 65536 \
  --weight_decay 0.001 --epoch_save $EPOCH_SAVE --head_size 64 --head_chunk $HEAD_CHUNK \
