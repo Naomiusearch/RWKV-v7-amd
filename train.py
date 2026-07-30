@@ -56,6 +56,7 @@ if __name__ == "__main__":
     parser.add_argument("--my_testing", default='x070', type=str)
     parser.add_argument("--kernel", default="", type=str)
     parser.add_argument("--my_exit_tokens", default=0, type=int)
+    parser.add_argument("--unsafe_fp_atomics", action="store_true")
 
     parser = Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -95,6 +96,7 @@ if __name__ == "__main__":
     os.environ["RWKV_CTXLEN"] = str(args.ctx_len)
     os.environ["RWKV_HEAD_SIZE"] = str(args.head_size)
     os.environ["RWKV_HEAD_L2WRAP_CE_CHUNK"] = str(args.head_chunk)
+    os.environ["RWKV_UNSAFE_FP_ATOMICS"] = str(int(args.unsafe_fp_atomics))
     if args.dim_att <= 0:
         args.dim_att = args.n_embd
     if args.dim_ffn <= 0:
